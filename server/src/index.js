@@ -9,19 +9,37 @@ const { execSync } = require('child_process');
 
 const isProd = process.env.NODE_ENV === 'production';
 
-// ── Auto-migrate database on startup (creates tables if they don't exist) ─────
+// ── Auto-migrate + Auto-seed on startup ───────────────────────────────────────
 if (isProd) {
   try {
     console.log('🔄 Running database migrations...');
     execSync('npx prisma db push --accept-data-loss', {
-      cwd: __dirname + '/..', // server directory
-      stdio: 'inherit',
-      env: process.env,
+      cwd: __dirname + '/..', stdio: 'inherit', env: process.env,
     });
     console.log('✅ Database migrations complete.');
   } catch (e) {
-    console.error('⚠️  Migration warning (may already be up to date):', e.message);
+    console.error('⚠️  Migration warning:', e.message);
   }
+
+  // Auto-seed: only runs if users table is empty
+  const { PrismaClient } = require('@prisma/client');
+  const seedPrisma = new PrismaClient();
+  seedPrisma.user.count().then(async (count) => {
+    if (count === 0) {
+      console.log('🌱 No users found — running seed...');
+      try {
+        execSync('node prisma/seed.js', {
+          cwd: __dirname + '/..', stdio: 'inherit', env: process.env,
+        });
+        console.log('✅ Seed complete. Demo users and properties created!');
+      } catch (e) {
+        console.error('⚠️  Seed warning:', e.message);
+      }
+    } else {
+      console.log(`✅ Database already has ${count} users. Skipping seed.`);
+    }
+    await seedPrisma.$disconnect();
+  }).catch(() => seedPrisma.$disconnect());
 }
 
 const app = express();
