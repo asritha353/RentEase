@@ -6,12 +6,8 @@
   "scripts": {
     "dev": "concurrently --names \"SERVER,CLIENT\" --prefix-colors \"blue,green\" \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "start": "node server/src/index.js",
-    "server": "npm run dev --prefix server",
-    "client": "npm run dev --prefix client",
-    "install:all": "npm install --prefix server --legacy-peer-deps && npm install --prefix client --legacy-peer-deps",
-    "postinstall": "npm install --prefix server --legacy-peer-deps && npm install --prefix client --legacy-peer-deps",
-    "build": "npm run build:prisma && npm run build --prefix client",
-    "build:prisma": "npm run db:generate --prefix server",
+    "postinstall": "npm install --prefix server && npm install --prefix client",
+    "build": "npm run build --prefix client",
     "seed": "npm run seed --prefix server"
   }
 }
