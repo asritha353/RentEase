@@ -5,8 +5,24 @@ const helmet     = require('helmet');
 const morgan     = require('morgan');
 const rateLimit  = require('express-rate-limit');
 const compression = require('compression');
+const { execSync } = require('child_process');
 
 const isProd = process.env.NODE_ENV === 'production';
+
+// ── Auto-migrate database on startup (creates tables if they don't exist) ─────
+if (isProd) {
+  try {
+    console.log('🔄 Running database migrations...');
+    execSync('npx prisma db push --accept-data-loss', {
+      cwd: __dirname + '/..', // server directory
+      stdio: 'inherit',
+      env: process.env,
+    });
+    console.log('✅ Database migrations complete.');
+  } catch (e) {
+    console.error('⚠️  Migration warning (may already be up to date):', e.message);
+  }
+}
 
 const app = express();
 const path = require('path');
