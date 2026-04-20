@@ -11,7 +11,7 @@
     "install:all": "npm install --prefix server --legacy-peer-deps && npm install --prefix client --legacy-peer-deps",
     "postinstall": "npm install --prefix server --legacy-peer-deps && npm install --prefix client --legacy-peer-deps",
     "build": "npm run build:prisma && npm run build --prefix client",
-    "build:prisma": "cd server && npx prisma generate",
+    "build:prisma": "npm run db:generate --prefix server",
     "seed": "npm run seed --prefix server"
   }
 }
