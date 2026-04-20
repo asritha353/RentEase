@@ -4,6 +4,7 @@ import api from '@/lib/api'
 
 interface User {
   id: string; name: string; email: string; avatar?: string; role: 'ADMIN'|'OWNER'|'TENANT'; status: string;
+  phone?: string; occupation?: string; company?: string; about?: string; createdAt?: string;
 }
 
 interface AuthState {
