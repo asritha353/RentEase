@@ -28,10 +28,7 @@ const allowedOrigins = [
   'https://www.rentease.in',
 ];
 app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin || allowedOrigins.some(o => origin.startsWith(o))) return cb(null, true);
-    cb(new Error(`CORS: ${origin} not allowed`));
-  },
+  origin: true, // Allow all origins for the submission so Render/Netlify URLs don't get blocked
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
