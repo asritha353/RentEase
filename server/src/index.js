@@ -80,9 +80,17 @@ app.get('/health', (_, res) => res.json({
   uptime: Math.floor(process.uptime()) + 's',
 }));
 
-// ── 404 handler ───────────────────────────────────────────────────────────────
-app.use((req, res) => {
+// ── Serve React Frontend (Production) ─────────────────────────────────────────
+app.use(express.static(path.join(__dirname, '../../client/dist')));
+
+// ── API 404 handler ───────────────────────────────────────────────────────────
+app.use('/api/*', (req, res) => {
   res.status(404).json({ error: `Route ${req.method} ${req.path} not found` });
+});
+
+// ── React SPA Fallback ────────────────────────────────────────────────────────
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../../client/dist', 'index.html'));
 });
 
 // ── Global error handler ──────────────────────────────────────────────────────
