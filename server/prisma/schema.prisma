@@ -1,0 +1,222 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  OWNER
+  TENANT
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum FurnishedType {
+  FURNISHED
+  SEMI_FURNISHED
+  UNFURNISHED
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  UNDER_REVIEW
+  RENTED
+  INACTIVE
+}
+
+enum PropertyType {
+  APARTMENT
+  VILLA
+  STUDIO
+  INDEPENDENT_HOUSE
+  PG
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model User {
+  id           String      @id @default(uuid())
+  name         String
+  email        String      @unique
+  avatar       String?
+  role         Role
+  status       UserStatus  @default(ACTIVE)
+  password     String?
+  phone        String?
+  occupation   String?
+  company      String?
+  about        String?  @db.Text
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  properties    Property[]
+  applications  Application[]
+  activityLogs  ActivityLog[]
+  notifications Notification[]
+  savedProperties SavedProperty[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model Property {
+  id           String         @id @default(uuid())
+  ownerId      String
+  owner        User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  title        String
+  description  String
+  city         String
+  area         String
+  address      String
+  rent         Int
+  deposit      Int
+  bedrooms     Int
+  bathrooms    Int
+  furnished    FurnishedType
+  amenities    String[]
+  images       String[]
+  status       PropertyStatus @default(AVAILABLE)
+  propertyType PropertyType
+  floorArea    Int
+
+  viewCount    Int            @default(0)
+
+  listedAt     DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  applications  Application[]
+  savedBy       SavedProperty[]
+
+  @@index([city])
+  @@index([area])
+  @@index([ownerId])
+  @@index([status])
+  @@index([rent])
+  @@map("properties")
+}
+
+model SavedProperty {
+  id         String   @id @default(uuid())
+  userId     String
+  propertyId String
+  savedAt    DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyId])
+  @@map("saved_properties")
+}
+
+model Application {
+  id         String            @id @default(uuid())
+  tenantId   String
+  propertyId String
+
+  tenant     User     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  status    ApplicationStatus @default(PENDING)
+
+  // Rich application form fields
+  coverMessage        String?
+  tenantPhone         String?
+  tenantOccupation    String?
+  tenantIncome        Int?
+  currentResidence    String?
+  moveInDate          DateTime?
+  occupantCount       Int?      @default(1)
+  hasPets             Boolean?  @default(false)
+  specialRequirements String?
+
+  appliedAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  agreement  Agreement?
+
+  @@index([tenantId])
+  @@index([propertyId])
+  @@index([status])
+  @@map("applications")
+}
+
+
+model Agreement {
+  id              String   @id @default(uuid())
+  applicationId   String   @unique
+
+  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  tenantName      String
+  ownerName       String
+  propertyAddress String
+  rent            Int
+  deposit         Int
+  duration        Int
+  startDate       DateTime
+  endDate         DateTime
+  terms           String   @db.Text
+  specialTerms    String?  @db.Text
+  pdfUrl          String?
+
+  generatedAt     DateTime @default(now())
+
+  @@map("agreements")
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  action    String
+  entity    String?
+  entityId  String?
+  metadata  Json?
+  ipAddress String?
+
+  timestamp DateTime @default(now())
+
+  @@index([userId])
+  @@index([timestamp])
+  @@map("activity_logs")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type      String   // NEW_APPLICATION | STATUS_CHANGED | AGREEMENT_READY | BLOCKED
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
