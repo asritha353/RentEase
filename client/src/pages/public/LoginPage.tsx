@@ -134,9 +134,8 @@ export default function LoginPage() {
                 <span className="px-2 bg-white text-slate-400">Quick demo access</span>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {[
-                { label: 'Admin',  email: 'admin@rentease.in',          cls: 'text-admin border-admin hover:bg-admin-50' },
                 { label: 'Owner',  email: 'ravi.owner@rentease.in',     cls: 'text-owner border-owner hover:bg-owner-50' },
                 { label: 'Tenant', email: 'ananya.tenant@rentease.in',  cls: 'text-tenant border-tenant hover:bg-tenant-50' },
               ].map(d => (
