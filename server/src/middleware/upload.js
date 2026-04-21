@@ -20,12 +20,17 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ storage, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
 
+// Build the correct base URL: use SERVER_URL env var in production, else localhost
+const getBaseUrl = () => {
+  if (process.env.SERVER_URL) return process.env.SERVER_URL;
+  return `http://localhost:${process.env.PORT || 3001}`;
+};
+
 // Attempt Cloudinary upload; fall back to local server URL if not configured
 const uploadToCloudinary = async (filePath) => {
   try {
     if (!process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME === 'your_cloud_name') {
-      // Return local URL
-      return `http://localhost:${process.env.PORT || 3001}/uploads/${path.basename(filePath)}`;
+      return `${getBaseUrl()}/uploads/${path.basename(filePath)}`;
     }
     const cloudinary = require('cloudinary').v2;
     cloudinary.config({
@@ -37,7 +42,7 @@ const uploadToCloudinary = async (filePath) => {
     return result.secure_url;
   } catch (err) {
     console.warn('Cloudinary upload failed, using local URL:', err.message);
-    return `http://localhost:${process.env.PORT || 3001}/uploads/${path.basename(filePath)}`;
+    return `${getBaseUrl()}/uploads/${path.basename(filePath)}`;
   }
 };
 
